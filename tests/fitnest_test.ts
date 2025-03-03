@@ -35,17 +35,22 @@ Clarinet.test({
 });
 
 Clarinet.test({
-  name: "Cannot create workout with invalid parameters",
+  name: "Cannot create duplicate workout names",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const deployer = accounts.get('deployer')!;
     const block = chain.mineBlock([
       Tx.contractCall('fitnest', 'create-workout',
-        [types.ascii(""), types.uint(0), types.uint(6)],
+        [types.ascii("Full Body HIIT"), types.uint(30), types.uint(3)],
+        deployer.address
+      ),
+      Tx.contractCall('fitnest', 'create-workout',
+        [types.ascii("Full Body HIIT"), types.uint(45), types.uint(4)],
         deployer.address
       )
     ]);
     
-    block.receipts[0].result.expectErr().expectUint(103); // err-invalid-params
+    block.receipts[0].result.expectOk();
+    block.receipts[1].result.expectErr().expectUint(104); // err-duplicate-name
   }
 });
 
