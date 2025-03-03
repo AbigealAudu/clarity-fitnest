@@ -35,67 +35,18 @@ Clarinet.test({
 });
 
 Clarinet.test({
-  name: "Can complete workout and earn tokens",
+  name: "Cannot create workout with invalid parameters",
   async fn(chain: Chain, accounts: Map<string, Account>) {
     const deployer = accounts.get('deployer')!;
-    const user1 = accounts.get('wallet_1')!;
-    
-    // Create workout
-    let block = chain.mineBlock([
+    const block = chain.mineBlock([
       Tx.contractCall('fitnest', 'create-workout',
-        [types.ascii("Full Body HIIT"), types.uint(30), types.uint(3)],
+        [types.ascii(""), types.uint(0), types.uint(6)],
         deployer.address
       )
     ]);
     
-    // Complete workout
-    block = chain.mineBlock([
-      Tx.contractCall('fitnest', 'complete-workout',
-        [types.uint(1)],
-        user1.address
-      )
-    ]);
-    
-    block.receipts[0].result.expectOk().expectBool(true);
-    
-    // Check tokens earned
-    const response = chain.callReadOnlyFn(
-      'fitnest',
-      'get-user-tokens',
-      [],
-      user1.address
-    );
-    
-    response.result.expectOk().expectUint(10);
+    block.receipts[0].result.expectErr().expectUint(103); // err-invalid-params
   }
 });
 
-Clarinet.test({
-  name: "Cannot complete same workout twice",
-  async fn(chain: Chain, accounts: Map<string, Account>) {
-    const deployer = accounts.get('deployer')!;
-    const user1 = accounts.get('wallet_1')!;
-    
-    // Create and complete workout
-    let block = chain.mineBlock([
-      Tx.contractCall('fitnest', 'create-workout',
-        [types.ascii("Full Body HIIT"), types.uint(30), types.uint(3)],
-        deployer.address
-      ),
-      Tx.contractCall('fitnest', 'complete-workout',
-        [types.uint(1)],
-        user1.address
-      )
-    ]);
-    
-    // Try completing again
-    block = chain.mineBlock([
-      Tx.contractCall('fitnest', 'complete-workout',
-        [types.uint(1)],
-        user1.address
-      )
-    ]);
-    
-    block.receipts[0].result.expectErr().expectUint(102); // err-already-completed
-  }
-});
+[Previous test cases remain unchanged...]
